@@ -188,6 +188,7 @@
         <button :disabled="disableAddRectangleBtn" @click="addWhiteRectangle">Add white rectangle</button>
         <button @click="downloadMeme">Download</button>
       </div>
+
       <div id="textboxes-container">
         <template v-for="(textBox, index) in textBoxes" :key="index">
           <TextBoxConfigurator

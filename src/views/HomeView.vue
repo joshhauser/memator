@@ -187,14 +187,6 @@
         <button @click="addText">Add text</button>
         <button :disabled="disableAddRectangleBtn" @click="addWhiteRectangle">Add white rectangle</button>
         <button @click="downloadMeme">Download</button>
-        <button
-          @click="
-            textBoxes[0].fontFamily = 'Helvetica';
-            canvas.add(textBoxes[0]);
-          "
-        >
-          Test police
-        </button>
       </div>
       <div id="textboxes-container">
         <template v-for="(textBox, index) in textBoxes" :key="index">

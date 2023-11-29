@@ -1,14 +1,17 @@
 <script setup lang="ts">
   import { computed, onMounted, ref, toRaw } from "vue";
   import { fabric } from "fabric";
+
   import TextBoxConfigurator from "@/components/TextBoxConfigurator.vue";
+
   import type { TextBoxConfig } from "@/models/TextBoxConfig";
 
   const maxWidth: number = 800;
   const maxHeight: number = 600;
-  const memeCanvas = ref();
   let canvas = undefined;
   let scaleFactor = undefined;
+
+  const memeCanvas = ref();
   const whiteRectangleAdded = ref<boolean>(false);
   const textBoxes = ref<any[]>([]);
   const uploadedImage = ref(undefined);
@@ -17,6 +20,22 @@
     return !uploadedImage.value || whiteRectangleAdded.value;
   });
 
+  const disableDownloadBtn = computed(() => {
+    return !uploadedImage.value;
+  });
+
+  /**
+   * Programmatically do the click action
+   * on the file input
+   */
+  const openUploadWindow = () => {
+    document.getElementById("imageInput").click();
+  };
+
+  /**
+   * Handle image upload
+   * @param event file uplaod event
+   */
   const onImageUpload = (event: any) => {
     const imageFile = event.target.files[0];
 
@@ -51,6 +70,9 @@
     }
   };
 
+  /**
+   * Add white rectangle above the image
+   */
   const addWhiteRectangle = () => {
     const rectangleHeight = 150;
     const canvasHeight = canvas.getHeight();
@@ -77,6 +99,10 @@
     });
   };
 
+  /**
+   * Set canvas boundaries to prevent elements from
+   * moving out of the visible rectangle
+   */
   const setCanvasBoundaries = () => {
     const boundary = new fabric.Rect({
       width: canvas.width,
@@ -111,9 +137,13 @@
     });
   };
 
+  /**
+   * Download the meme as a PNG
+   */
   const downloadMeme = () => {
     const dataUrl = canvas.toDataURL({ format: "png" });
     const link = document.createElement("a");
+
     link.href = dataUrl;
     link.download = "meme.png";
     document.body.appendChild(link);
@@ -131,8 +161,6 @@
       lockUniScaling: true,
     });
 
-    console.log(text);
-
     adjustTextboxWidth(text);
 
     text.on("changed", function () {
@@ -140,11 +168,15 @@
     });
 
     canvas.add(text);
-
     textBoxes.value.push(text);
   };
 
-  const onConfigUpdate = (index: number, config: TextBoxConfig) => {
+  /**
+   * Handle text box configuration update
+   * @param index the index of the text box
+   * @param config the new configuration
+   */
+  const onTextBoxConfigUpdate = (index: number, config: TextBoxConfig) => {
     textBoxes.value[index].set("text", config.text);
     textBoxes.value[index].set("fill", config.fill);
     textBoxes.value[index].set("fontSize", config.fontSize);
@@ -153,17 +185,25 @@
     canvas.renderAll();
   };
 
-  const adjustTextboxWidth = (textbox) => {
+  /**
+   * Adjust text box with to its content
+   * @param textBox the text box to adjust
+   */
+  const adjustTextboxWidth = (textBox) => {
     const ctx = canvas.getContext("2d");
-    ctx.font = textbox.fontSize + "px " + textbox.fontFamily;
+    ctx.font = textBox.fontSize + "px " + textBox.fontFamily;
 
-    const textWidth = ctx.measureText(textbox.text).width;
+    const textWidth = ctx.measureText(textBox.text).width;
 
-    textbox.set({
+    textBox.set({
       width: textWidth + 10,
     });
   };
 
+  /**
+   * Handle text box delete event
+   * @param index the index of the deleted text box
+   */
   const onTextBoxDelete = (index: number) => {
     const removedTextBox = textBoxes.value.splice(index, 1)[0];
     canvas.remove(toRaw(removedTextBox));
@@ -176,73 +216,105 @@
 
 <template>
   <main>
-    <div id="left">
-      <canvas id="memeCanvas" ref="memeCanvas" width="800" height="600"></canvas>
+    <div class="header">
+      <h2>Memator</h2>
     </div>
+    <div class="content">
+      <div class="left">
+        <div class="buttons">
+          <input id="imageInput" type="file" accept="image/png, image/jpeg" @change="onImageUpload" />
+          <button @click="openUploadWindow">Browse</button>
+          <button @click="addText">Add text</button>
+          <button :disabled="disableAddRectangleBtn" @click="addWhiteRectangle">Add white rectangle</button>
+          <button :disabled="disableDownloadBtn" @click="downloadMeme">Download</button>
+        </div>
 
-    <div id="right">
-      <div id="buttons">
-        <input id="imageInput" type="file" accept="image/png, image/jpeg" @change="onImageUpload" />
-        <input type="button" value="Browse..." onclick="document.getElementById('imageInput').click();" />
-        <button @click="addText">Add text</button>
-        <button :disabled="disableAddRectangleBtn" @click="addWhiteRectangle">Add white rectangle</button>
-        <button @click="downloadMeme">Download</button>
+        <div id="textboxes-container">
+          <template v-for="(textBox, index) in textBoxes" :key="index">
+            <TextBoxConfigurator
+              :index="index"
+              :config="{
+                fontSize: textBox.fontSize,
+                fill: textBox.fill,
+                fontFamily: textBox.fontFamily,
+                text: textBox.text,
+              }"
+              @update:config="onTextBoxConfigUpdate"
+              @delete="onTextBoxDelete"
+            />
+          </template>
+        </div>
       </div>
 
-      <div id="textboxes-container">
-        <template v-for="(textBox, index) in textBoxes" :key="index">
-          <TextBoxConfigurator
-            :index="index"
-            :config="{
-              fontSize: textBox.fontSize,
-              fill: textBox.fill,
-              fontFamily: textBox.fontFamily,
-              text: textBox.text,
-            }"
-            @update:config="onConfigUpdate"
-            @delete="onTextBoxDelete"
-          />
-        </template>
+      <div class="right">
+        <canvas id="memeCanvas" ref="memeCanvas" width="800" height="600"></canvas>
       </div>
     </div>
   </main>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
   main {
     display: flex;
-  }
-
-  #right {
-    display: flex;
+    width: 100%;
     flex-direction: column;
-    gap: 2rem;
-    padding-left: 2rem;
-    max-height: 100vh;
-  }
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    height: 100%;
 
-  #buttons {
-    display: flex;
-    gap: 3rem;
-    height: fit-content;
-  }
+    .header {
+      height: 3rem;
 
-  canvas {
-    border: 2px solid #000;
-    min-height: 200px;
-    min-width: 300px;
-    height: fit-content;
-    width: fit-content;
-  }
+      h2 {
+        margin: 0;
+        padding: 0;
+        text-align: center;
+      }
+    }
 
-  #imageInput {
-    display: none;
-  }
+    .content {
+      display: flex;
 
-  #textboxes-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    overflow-y: auto;
+      .left,
+      .right {
+        width: 50%;
+        height: 100%;
+      }
+
+      .left {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        padding-left: 2rem;
+        max-height: 100vh;
+
+        .buttons {
+          display: flex;
+          gap: 3rem;
+          height: fit-content;
+        }
+
+        #imageInput {
+          display: none;
+        }
+      }
+
+      .right {
+        canvas {
+          border: 2px solid #000;
+          min-height: 200px;
+          min-width: 300px;
+          height: fit-content;
+          width: fit-content;
+        }
+
+        #textboxes-container {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          overflow-y: auto;
+        }
+      }
+    }
   }
 </style>

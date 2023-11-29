@@ -33,7 +33,10 @@
     <legend>Text box n°{{ props.index + 1 }}</legend>
     <input v-model="configuration!.text" type="text" />
     <input v-model="configuration!.fill" type="color" />
-    <input v-model="configuration!.fontSize" type="range" min="1" max="100" />
+    <div class="range">
+      <input v-model="configuration!.fontSize" type="range" min="1" max="100" />
+      {{ configuration!.fontSize }}
+    </div>
     <button @click="emits('delete', props.index)">x</button>
   </fieldset>
 </template>
@@ -43,5 +46,11 @@
     display: flex;
     gap: 1rem;
     align-items: center;
+  }
+
+  .range {
+    display: flex;
+    align-items: center;
+    gap: 5px;
   }
 </style>

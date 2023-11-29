@@ -297,6 +297,14 @@
         #imageInput {
           display: none;
         }
+
+        #textboxes-container {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          overflow-y: auto;
+          width: 95%;
+        }
       }
 
       .right {
@@ -306,13 +314,6 @@
           min-width: 300px;
           height: fit-content;
           width: fit-content;
-        }
-
-        #textboxes-container {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-          overflow-y: auto;
         }
       }
     }

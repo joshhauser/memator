@@ -159,6 +159,7 @@
       fontSize: 30,
       fill: "#000000",
       lockUniScaling: true,
+      editable: false,
     });
 
     adjustTextboxWidth(text);
